@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Where's the beef?</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Prompt", sans-serif;
+      }
+      #map {
+        height: 100%;
+        width: 100%;
+      }
+
+      p {
+        font-size: 13px;
+      }
+
+      #gradient-text {
+        font-family: "Prompt", sans-serif;
+        color: transparent;
+        font-weight: 400;
+        background-image: linear-gradient(
+          to right,
+          #fee5d9,
+          #fcae91,
+          #fb6a4a,
+          #cb181d
+        );
+        background-size: 100%;
+        -webkit-background-clip: text;
+        -moz-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        -moz-text-fill-color: transparent;
+        text-align: center;
+      }
+
+      #directions {
+        font-family: "Prompt", sans-serif;
+        font-weight: normal;
+      }
+
+      #footnote {
+        font-family: "Prompt", sans-serif;
+        font-weight: lighter;
+        font-size: 12px;
+      }
+
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        display: inline-block;
+      }
+      #legend {
+        z-index: 1000;
+        padding: 10px;
+        padding-left: 20px;
+        padding-top: 0px;
+        box-shadow: 0 0 10px whitesmoke;
+        font-family: "Prompt", sans-serif;
+        font-size: 16px;
+        color: whitesmoke;
+        position: absolute;
+        top: 100px;
+        left: 10px;
+        background-color: #272727;
+        opacity: 0.95;
+        width: 550px;
+        height: 750px;
+        text-align: left;
+        border-color: #cb181d;
+        border-style: ridge;
+        border-width: medium;
+      }
+
+      #infoLegend {
+        z-index: 1000;
+        width: 300px;
+        height: 800px;
+        bottom: -250px;
+        left: 150px;
+        position: absolute;
+        background-image: url("./imgs/Legend.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+      }
+
+      .toolclass {
+        z-index: 1000;
+        position: absolute;
+        box-sizing: content-box;
+        padding: 6px 6px;
+        font-family: "Prompt", sans-serif;
+        font-size: 16px;
+        text-align: center;
+        color: whitesmoke;
+        background: #272727;
+        background-color: #272727;
+        opacity: 1;
+        box-shadow: 0 0 10px whitesmoke;
+        width: 350px;
+        height: inherit;
+        border-color: whitesmoke;
+        border-style: groove;
+        border-width: thin;
+      }
+      .collapsible {
+        font-family: "Prompt", sans-serif;
+        background-color: whitesmoke;
+        color: #272727;
+        cursor: pointer;
+        width: 150px;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+        position: absolute;
+        top: 25px;
+        left: 60px;
+        padding: 10px;
+        z-index: 400;
+        overflow-y: hidden;
+      }
+
+      /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+      .active,
+      .collapsible:hover {
+        color: transparent;
+        font-weight: 300;
+        font-family: "Prompt", sans-serif;
+        background-image: linear-gradient(
+          to right,
+          #fee5d9,
+          #fcae91,
+          #fb6a4a,
+          #cb181d
+        );
+        background-size: 100%;
+      }
+
+      /* Style the collapsible content. Note: hidden by default */
+      .content {
+        padding: 0 18px;
+        display: none;
+        overflow-y: hidden;
+        background-color: whitesmoke;
+        max-height: 100%;
+        overflow: hidden;
+        transition: max-height 0.2s ease-out;
+      }
+      .collapsible:after {
+        content: "\02795"; /* Unicode character for "plus" sign (+) */
+        font-size: 13px;
+        color: #272727;
+        float: right;
+        margin-left: 5px;
+      }
+
+      .active:after {
+        content: "\2796"; /* Unicode character for "minus" sign (-) */
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <button type="button" class="collapsible">Information</button>
+    <div id="legend">
+      <h1 id="gradient-text">
+        Where's the beef?
+      </h1>
+      <p>
+        While the global meat industry provides food and a livelihood for
+        billions of people, it also has significant environmental and health
+        consequences for the planet. Meat demand is associated with higher
+        incomes and a shift - due to urbanisation - to food consumption changes
+        that favour increased proteins from animal sources in diets
+        <a
+          href="https://data.oecd.org/agroutput/meat-consumption.htm"
+          style="color: #7df9ff;"
+          >(OECD)</a
+        >.
+        <br />
+        <br />
+        This map shows beef consumption in kilogram per capita* and — where the
+        beef is ;). The countries with the lowest beef consumption are white,
+        while the countries with the highest beef consumption are dark red.
+        <br />
+        <br />
+        The data were downloaded from
+        <a
+          href="https://data.oecd.org/agroutput/meat-consumption.htm"
+          style="color: #7df9ff;"
+          >OECD</a
+        >, thus the data are limited to countries that are members of OECD. It
+        was the only meat consumption data I could find that was free to
+        download.
+        <br />
+        <br />
+        Per their
+        <a
+          href="https://data.oecd.org/agroutput/meat-consumption.htm"
+          style="color: #7df9ff;"
+          >website</a
+        >, the OECD (Organisation for Economic Co-operation and Development) is
+        an international organization that works to build better policies for
+        better lives. They work on establishing evidence-based international
+        standards and finding solutions to a range of social, economic and
+        environmental challenges.
+        <br />
+        <br />
+        Hover over a county to learn more and click one to zoom to it!
+        <br />
+        <br />
+        <b
+          >Click on the information box above to make this section appear and
+          disappear.</b
+        >
+      </p>
+      <div id="infoLegend"></div>
+      <br /><br /><br /><br /><br /><br /><br />
+      <p id="footnote">
+        *per capita: the total amount of something in a country or area divided
+        by the number of people in that country or area
+      </p>
+    </div>
+    <script src="data/leaflet-providers.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
